@@ -1,0 +1,48 @@
+image: gradle:8.10-jdk17
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+stages:
+  - build
+  - test
+  - package
+  - deploy
+
+before_script:
+  - gradle --version
+
+build-job:
+  stage: build
+  script:
+    - gradle clean build --no-daemon
+  artifacts:
+    paths:
+      - build/libs/
+    expire_in: 1 week
+
+test-job:
+  stage: test
+  script:
+    - gradle test
+  artifacts:
+    when: always
+    paths:
+      - build/test-results/
+      - build/reports/tests/test/
+  allow_failure: false
+
+package-job:
+  stage: package
+  script:
+    - gradle assemble
+  artifacts:
+    paths:
+      - build/libs/
+    expire_in: 1 week
+
+deploy-job:
+  stage: deploy
+  script:
+    - echo "Deploying application"
+  when: on_success
